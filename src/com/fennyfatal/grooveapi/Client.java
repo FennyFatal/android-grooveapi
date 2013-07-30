@@ -41,18 +41,62 @@ public class Client{
 			throw new Exception();
 	}
 	
-	public ArrayList<Song> testFunctions() throws JSONException
+	public ArrayList<Song> getPopularSongs()
 	{
-		
-		JSONArray songs = getPopularSongs("monthly").getJSONArray("Songs");
+		JSONArray songs;
+	try {
+		songs = getPopularSongs("monthly").getJSONArray("Songs");
 		ArrayList<Song> Songs = new ArrayList<Song>();
 		for (int i = 0; i< songs.length() ; i++)
 		{
 			Songs.add(Song.songFromJSONObject(songs.getJSONObject(i)));
 		}
 		return Songs;
+	} catch (JSONException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	return null;
+	}
+	public ArrayList<Song> doSearch(String query)
+	{
+		JSONArray songs;
+	try { 
+		songs = getSearchResults(query).getJSONArray("result");
+		ArrayList<Song> Songs = new ArrayList<Song>();
+		for (int i = 0; i< songs.length() ; i++)
+		{
+			Songs.add(Song.songFromJSONObject(songs.getJSONObject(i)));
+		}
+		return Songs;
+	} catch (JSONException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	return null;
 	}
 	
+	JSONObject getSearchResults(String query)
+	{
+		return getSearchResults("Songs", query);
+	}
+	
+	JSONObject getSearchResults(String type, String query)
+	{
+		try {
+			return new JSONObject(
+			request("getResultsFromSearch", 
+					'{' +
+					"\"type\":" + '"' + type +"\","+
+					"\"query\":" + '"' + query +'"'+
+					'}')[1]).getJSONObject("result");
+			
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	public String GetPlayURL(Song s)
 	{

@@ -46,6 +46,9 @@ public class Song {
 
 	public static Song songFromJSONObject(JSONObject Jsong) throws JSONException
 	{
+		try	{
+		return new Song(Jsong.getString("SongName"),Jsong.getString("SongID"),Jsong.getString("EstimateDuration"),null,Jsong.getString("IsLowBitrateAvailable"),Jsong.getString("IsVerified"),Jsong.getString("PopularityIndex"),Jsong.getString("ArtistName"),Jsong.getString("ArtistID"),Jsong.getString("AlbumName"),Jsong.getString("AlbumID"),Jsong.getString("Year"),Jsong.getString("CoverArtFilename"),Jsong.getString("TrackNum"),null,null);
+		} catch (Exception ex) {} // Try to load from search first, and the SongName value will failout first, allowing us to save cycles testing it.
 		return new Song(Jsong.getString("Name"),Jsong.getString("SongID"),Jsong.getString("EstimateDuration"),Jsong.getString("Flags"),Jsong.getString("IsLowBitrateAvailable"),Jsong.getString("IsVerified"),Jsong.getString("Popularity"),Jsong.getString("ArtistName"),Jsong.getString("ArtistID"),Jsong.getString("AlbumName"),Jsong.getString("AlbumID"),Jsong.getString("Year"),Jsong.getString("CoverArtFilename"),Jsong.getString("TrackNum"),Jsong.getString("AvgDailyWeight"),Jsong.getString("NumPlaysMonth")); 
 	}
 	
