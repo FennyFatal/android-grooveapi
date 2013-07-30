@@ -18,29 +18,53 @@ import android.os.StrictMode;
 import android.text.format.Time;
 
 public class Client{
+	
+	
 	String SALT = "gooeyFlubber";
 	String VERSION = "20120830";
 	String CLIENT_NAME ="mobileshark";
-	String session = "";
-	String country = "";
+	String session = "null";
+	String country = "null";
 	String token = "null";
 	long TTL = 120000; // Milliseconds
-	UUID uuid;
+	UUID uuid = null;
 	long time = 0;
 	boolean initialized = false;
 	
-	public Client(Context theContext) throws Exception 
-	{
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-		StrictMode.setThreadPolicy(policy); 
-		if (!getSessionandCountry())
-			throw new Exception();
-		uuid = UUID.randomUUID();
-		if (!getCommunicationToken())
-			throw new Exception();
+	//For when we ever go internally async.
+	
+	public boolean isInitialized() { 
+		return initialized;
 	}
 	
+	/*
+	 * The Constructor:D
+	 * Just instantiate stuff here. 
+	 */
+	
+	public Client(Context theContext) throws Exception 
+	{
+		/*
+		 * This is so we can do all of these things from the main thread, it is recommended to make calls from worker threads.
+		 * This will likely be removed from the final release. Please do not rely on it if you use this in your projects. 
+		 */
+		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		StrictMode.setThreadPolicy(policy);
+		
+		//Set up needed information for the instance.
+		if (!getSessionandCountry())
+			throw new Exception(); //TODO Put some information in here.
+		uuid = UUID.randomUUID();
+		if (!getCommunicationToken())
+			throw new Exception(); //TODO Put some information in here.
+		
+	}
+
+	/*
+	 * Public method that takes the results from getResultsFromSearch and returns a playlist. 
+	 * oddly enough the internal song array is also called "result" here.
+	 * It also has a slightly different field layout from the popular songs results.
+	 */
 	public ArrayList<Song> getPopularSongs()
 	{
 		JSONArray songs;
@@ -53,11 +77,19 @@ public class Client{
 		}
 		return Songs;
 	} catch (JSONException e) {
-		// TODO Auto-generated catch block
+		// TODO Should we just re-throw this?
 		e.printStackTrace();
 	}
 	return null;
 	}
+	
+	
+	/*
+	 * Public method that takes the results from getResultsFromSearch and returns a playlist. 
+	 * oddly enough the internal song array is also called "result" here.
+	 * It also has a slightly different field layout from the popular songs results.
+	 */
+	
 	public ArrayList<Song> doSearch(String query)
 	{
 		JSONArray songs;
@@ -70,18 +102,27 @@ public class Client{
 		}
 		return Songs;
 	} catch (JSONException e) {
-		// TODO Auto-generated catch block
+		// TODO Should we just re-throw this?
 		e.printStackTrace();
 	}
 	return null;
 	}
-	
-	JSONObject getSearchResults(String query)
+
+
+	/*
+	 * Overloaded internal method for getResultsFromSearch.
+	 * returns the Result object from the json response.
+	 */
+	private JSONObject getSearchResults(String query)
 	{
 		return getSearchResults("Songs", query);
 	}
 	
-	JSONObject getSearchResults(String type, String query)
+	/*
+	 * Internal method that holds the param definition for getResultsFromSearch.
+	 * returns the Result object from the json response.
+	 */
+	private JSONObject getSearchResults(String type, String query)
 	{
 		try {
 			return new JSONObject(
@@ -92,7 +133,7 @@ public class Client{
 					'}')[1]).getJSONObject("result");
 			
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
+			// TODO Should we just re-throw this?
 			e.printStackTrace();
 		}
 		return null;
@@ -102,6 +143,10 @@ public class Client{
 	{
 		return getStreamURLFromSongID(s.getSongID());
 	}
+	/*
+	 * Internal method that holds the param definition for popularGetSongs.
+	 * returns the Result object from the json response.
+	 */
 	private JSONObject getPopularSongs (String period)
 	{
 		if (period.equals("monthly") || period.equals("daily"))
@@ -109,7 +154,7 @@ public class Client{
 			try {
 				return new JSONObject(request("popularGetSongs","{\"type\":\""+period+"\"}",true)[1]).getJSONObject("result");
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
+				// TODO Should we just re-throw this?
 				e.printStackTrace();
 			}
 		}
@@ -123,12 +168,17 @@ public class Client{
 			try {
 				return "http://"+streamdata.getString("ip")+"/stream.php?streamKey="+streamdata.getString("streamKey");
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
+				// TODO Should we just re-throw this?
 				e.printStackTrace();
 			}
 		}
 		return null;
 	}
+	
+	/*
+	 * Internal method that holds the param definition for getStreamKeyFromSongID.
+	 * returns the Result object from the json response.
+	 */
 	
 	private JSONObject getStreamKeyFromSongID(String songID)
 	{
@@ -143,11 +193,19 @@ public class Client{
 				"\"mobile\":false"+
 				"}")[1]).getJSONObject("result");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
+			// TODO Should we just re-throw this?
 			e.printStackTrace();
 		}
 		return null;
 	}
+	
+	/*
+	 * Here we get the communication token. 
+	 * This seems to last a random amount of time, despite what the header seems to say about expiration.
+	 * We are reupping on it every ~2 min or so for now (configurable in the const values for the time being)
+	 * TODO Add an argument for the TTL in the constructor?
+	 */
+	
 	private boolean getCommunicationToken() {
 		try {
 			this.token = "null";
@@ -157,7 +215,7 @@ public class Client{
 			this.time = Calendar.getInstance().getTimeInMillis()+this.TTL;
 		return true;
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
+			// TODO Should we just re-throw this?
 			e.printStackTrace();
 		}
 		return false;
@@ -166,6 +224,12 @@ public class Client{
 	{
 		return request(method, paramaters, true);
 	}
+	/*
+	 * This method is the main request builder of the application.
+	 * The whole thing is working RAW primarily due to my dissatisfaction with 
+	 * HTTP layers on this platform.
+	 * I am open to any suggestions.
+	 */
 	private String[] request(String method, String paramaters, boolean secure){
 		if (this.token != "null" && Calendar.getInstance().getTime().after(new Date(this.time)))
 			getCommunicationToken();
@@ -178,7 +242,7 @@ public class Client{
 		Body =  "{\"header\":"+
 			"{"+
 			"\"token\":"+(this.token.equals("null")? "null" : '"' + 
-				genToken(Utils.md5(session),method,this.token) + '"' )+","+
+				genToken(method,this.token) + '"' )+","+
 			"\"uuid\":\""+this.uuid.toString().toUpperCase()+"\","+
 			"\"client\":\""+this.CLIENT_NAME+"\","+
 			"\"session\":\""+this.session+"\","+
@@ -207,7 +271,11 @@ public class Client{
 		}
     	}
 	
-	private String genToken(String sessionHash, String method, String token) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	/*
+	 * Generate a token based on the SALT, the method we are calling, and the session token. 
+	 * we also prepend a random series of 3 hex bytes we use for salt to the final hash. 
+	 */
+	private String genToken(String method, String token) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		Random rnd = new Random();
         String lastRandomizer = "";
         for (int i = 0; i < 3; i++)
@@ -215,10 +283,18 @@ public class Client{
             int value = rnd.nextInt(255);
             lastRandomizer += String.format("%02x", value);
         }
-        String clearText = method + ":" + token+ ":" + this.SALT + ":" + lastRandomizer.toLowerCase();
+        String clearText = method + ":" + 
+        token+      //Why bother passing this as an argument?
+        ":" +
+        this.SALT + //or maybe we should pass this as an argument? Would probably be better for portability, and possible refactoring.
+        ":" + lastRandomizer.toLowerCase();
         return (lastRandomizer + Utils.SHA1(clearText)).toLowerCase();
 	}
 
+	/*
+	 * Get the Session header value, and store it. We also parse the country string rather than using a canned one.
+	 * If the country code becomes too much of a moving target we may have to either use regex, or static values.
+	 */
 	private boolean getSessionandCountry()
 	{
 		try{
