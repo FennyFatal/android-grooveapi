@@ -1,4 +1,4 @@
-package com.fennyfatal.grooveapi;
+package com.fennyfatal.GrooveApi;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -15,7 +15,6 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.os.StrictMode;
-import android.text.format.Time;
 
 public class Client{
 	
@@ -65,12 +64,12 @@ public class Client{
 	 * oddly enough the internal song array is also called "result" here.
 	 * It also has a slightly different field layout from the popular songs results.
 	 */
-	public ArrayList<Song> getPopularSongs()
+	public Playlist getPopularSongs()
 	{
 		JSONArray songs;
 	try {
 		songs = getPopularSongs("monthly").getJSONArray("Songs");
-		ArrayList<Song> Songs = new ArrayList<Song>();
+		Playlist Songs = new Playlist();
 		for (int i = 0; i< songs.length() ; i++)
 		{
 			Songs.add(Song.songFromJSONObject(songs.getJSONObject(i)));
@@ -90,12 +89,12 @@ public class Client{
 	 * It also has a slightly different field layout from the popular songs results.
 	 */
 	
-	public ArrayList<Song> doSearch(String query)
+	public Playlist doSearch(String query)
 	{
 		JSONArray songs;
 	try { 
 		songs = getSearchResults(query).getJSONArray("result");
-		ArrayList<Song> Songs = new ArrayList<Song>();
+		Playlist Songs = new Playlist();
 		for (int i = 0; i< songs.length() ; i++)
 		{
 			Songs.add(Song.songFromJSONObject(songs.getJSONObject(i)));
@@ -182,7 +181,6 @@ public class Client{
 	
 	private JSONObject getStreamKeyFromSongID(String songID)
 	{
-		
 		try {
 			return new JSONObject( request("getStreamKeyFromSongIDEx",
 				"{"+

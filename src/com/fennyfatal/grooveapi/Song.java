@@ -1,4 +1,4 @@
-package com.fennyfatal.grooveapi;
+package com.fennyfatal.GrooveApi;
 
 import org.json.JSONException;
 import org.json.JSONObject;

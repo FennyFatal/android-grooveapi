@@ -1,4 +1,4 @@
-package com.fennyfatal.grooveapi;
+package com.fennyfatal.GrooveApi;
 
 public class Version {
 
