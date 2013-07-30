@@ -55,15 +55,21 @@ public class Utils {
             theWholeThing[0] = retval;
             boolean chunked = retval.contains("Transfer-Encoding: chunked");
             retval = "";
+            boolean islastline= false;
             int count = 0;
             for (String line; (line = reader.readLine()) != null;) {
-            	if (!chunked || !(line.length() == 4 && count == 0))
+            	if (!chunked || !(line.matches("^[0-9a-fA-F]*$") && count == 0))
             	{
-            		if (chunked && line.equals("a000"))
-            			retval = retval.substring(0, retval.length()-1);
+            		if (chunked && line.matches("^[0-9a-fA-F]*$")) //Hackish way of dealing with chunked encoding.
+            		{
+            			if (!islastline)
+            				retval = retval.substring(0, retval.length()-1);
+            			islastline = true;
+            		}
             		else
             		{
             			retval += line + '\n';
+            			islastline = false;
             		}
             	}
             	count++;

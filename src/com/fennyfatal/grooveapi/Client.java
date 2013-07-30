@@ -3,28 +3,30 @@ package com.fennyfatal.grooveapi;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
 import android.os.StrictMode;
-
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
+import android.text.format.Time;
 
 public class Client{
-	RequestQueue requestQueue;
 	String SALT = "gooeyFlubber";
 	String VERSION = "20120830";
 	String CLIENT_NAME ="mobileshark";
 	String session = "";
 	String country = "";
 	String token = "null";
-	int TTL = 120;
+	long TTL = 120000; // Milliseconds
 	UUID uuid;
+	long time = 0;
 	boolean initialized = false;
 	
 	public Client(Context theContext) throws Exception 
@@ -32,7 +34,6 @@ public class Client{
 		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
 		StrictMode.setThreadPolicy(policy); 
-		this.requestQueue = Volley.newRequestQueue(theContext);
 		if (!getSessionandCountry())
 			throw new Exception();
 		uuid = UUID.randomUUID();
@@ -40,12 +41,29 @@ public class Client{
 			throw new Exception();
 	}
 	
-	JSONObject getPopularSongs (String period)
+	public ArrayList<Song> testFunctions() throws JSONException
+	{
+		
+		JSONArray songs = getPopularSongs("monthly").getJSONArray("Songs");
+		ArrayList<Song> Songs = new ArrayList<Song>();
+		for (int i = 0; i< songs.length() ; i++)
+		{
+			Songs.add(Song.songFromJSONObject(songs.getJSONObject(i)));
+		}
+		return Songs;
+	}
+	
+	
+	public String GetPlayURL(Song s)
+	{
+		return getStreamURLFromSongID(s.getSongID());
+	}
+	private JSONObject getPopularSongs (String period)
 	{
 		if (period.equals("monthly") || period.equals("daily"))
 		{
 			try {
-				return new JSONObject(request("popularGetSongs","{\"type\":\""+period+"\"}",true)[1]);
+				return new JSONObject(request("popularGetSongs","{\"type\":\""+period+"\"}",true)[1]).getJSONObject("result");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -53,13 +71,13 @@ public class Client{
 		}
 		return null;
 	}
-	String getStreamURLFromSongID(String songID)
+	private String getStreamURLFromSongID(String songID)
 	{
 		JSONObject streamdata = getStreamKeyFromSongID(songID);
 		if (streamdata != null)
 		{
 			try {
-				return "http://"+streamdata.getString("ip")+"/stream.php?streamKey="+streamdata.getString("stream_key");
+				return "http://"+streamdata.getString("ip")+"/stream.php?streamKey="+streamdata.getString("streamKey");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -68,7 +86,7 @@ public class Client{
 		return null;
 	}
 	
-	JSONObject getStreamKeyFromSongID(String songID)
+	private JSONObject getStreamKeyFromSongID(String songID)
 	{
 		
 		try {
@@ -76,10 +94,10 @@ public class Client{
 				"{"+
 				"\"type\":" + "0"+"," +
 				"\"prefetch\":false," +
-				"\"songID\":"+'"'+24525551+'"'+"," +
+				"\"songID\":"+'"'+songID+'"'+"," +
 				"\"country\":"+ this.country +"," +
 				"\"mobile\":false"+
-				"}")[1]);
+				"}")[1]).getJSONObject("result");
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -88,9 +106,11 @@ public class Client{
 	}
 	private boolean getCommunicationToken() {
 		try {
+			this.token = "null";
 			String body = request("getCommunicationToken", "{\"secretKey\":\""+Utils.md5(session)+"\"}", true)[1];
 			JSONObject values = new JSONObject(body);
-			token = values.getString("result");
+			this.token = values.getString("result");
+			this.time = Calendar.getInstance().getTimeInMillis()+this.TTL;
 		return true;
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -103,6 +123,8 @@ public class Client{
 		return request(method, paramaters, true);
 	}
 	private String[] request(String method, String paramaters, boolean secure){
+		if (this.token != "null" && Calendar.getInstance().getTime().after(new Date(this.time)))
+			getCommunicationToken();
 		String host = "grooveshark.com";
 		int port = (!secure) ? 80 : 443;
 		String path = "/more.php?" + (method.equals("getCommunicationToken") ? "json" : method);
