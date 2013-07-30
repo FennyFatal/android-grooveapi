@@ -21,6 +21,11 @@ public class Song {
 	String AvgDailyWeight; 
 	String NumPlaysMonth;
 	
+	@Override
+	public String toString() {
+		return ArtistName+" - "+Name; 
+	}
+
 	public Song(String name, String songID, String estimateDuration, String flags,
 			String isLowBitrateAvailable, String isVerified, String popularity,
 			String artistName, String artistID, String albumName, String albumID,
