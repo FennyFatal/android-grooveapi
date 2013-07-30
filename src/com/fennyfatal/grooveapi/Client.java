@@ -109,17 +109,18 @@ public class Client{
 		
 		String Body ="";
 		try {
-			Body = "{\"header\":"+
-			     "{"+
-					  "\"token\":"+(this.token.equals("null")? "null" : '"' + genToken(Utils.md5(session),method,this.token) + '"' )+","+
-					  "\"uuid\":\""+this.uuid.toString().toUpperCase()+"\","+
-					  "\"client\":\""+this.CLIENT_NAME+"\","+
-					  "\"session\":\""+this.session+"\","+
-					  "\"clientRevision\":\""+this.VERSION+"\"" +
-				"}," +
+		Body =  "{\"header\":"+
+			"{"+
+			"\"token\":"+(this.token.equals("null")? "null" : '"' + 
+				genToken(Utils.md5(session),method,this.token) + '"' )+","+
+			"\"uuid\":\""+this.uuid.toString().toUpperCase()+"\","+
+			"\"client\":\""+this.CLIENT_NAME+"\","+
+			"\"session\":\""+this.session+"\","+
+			"\"clientRevision\":\""+this.VERSION+"\"" +
+			"}," +
 			"\"parameters\":"+
-				 paramaters +','+
-		    "\"method\":\""+method+"\"" +
+			paramaters +','+
+		    	"\"method\":\""+method+"\"" +
 			"}";
 		} catch (NoSuchAlgorithmException e1) {} catch (UnsupportedEncodingException e1) {} //THESE SHOULD NEVER HAPPEN
 		
@@ -138,7 +139,7 @@ public class Client{
 		} catch (IOException e) {
 			return null;
 		}
-    }
+    	}
 	
 	private String genToken(String sessionHash, String method, String token) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		Random rnd = new Random();
@@ -150,7 +151,7 @@ public class Client{
         }
         String clearText = method + ":" + token+ ":" + this.SALT + ":" + lastRandomizer.toLowerCase();
         return (lastRandomizer + Utils.SHA1(clearText)).toLowerCase();
-    }
+	}
 
 	private boolean getSessionandCountry()
 	{
@@ -174,5 +175,4 @@ public class Client{
 		return false;
 		}
 	}
-
 }
