@@ -3,7 +3,10 @@ package com.fennyfatal.GrooveApi;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Song {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Song implements Parcelable {
 	String Name;
 	String SongID; 
 	String EstimateDuration; 
@@ -152,5 +155,65 @@ public class Song {
 	}
 	public void setNumPlaysMonth(String numPlaysMonth) {
 		NumPlaysMonth = numPlaysMonth;
+	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+	
+	 public static final Parcelable.Creator<Song> CREATOR =
+			   new Parcelable.Creator<Song>(){
+
+			    @Override
+			    public Song createFromParcel(Parcel source) {
+			     return new Song(source);
+			    }
+
+			    @Override
+			    public Song[] newArray(int size) {
+			     return new Song[size];
+			    }
+		};
+			 
+	
+	private Song(Parcel in)
+	{
+		Name = in.readString();
+		SongID = in.readString();
+		EstimateDuration = in.readString();
+		Flags = in.readString();
+		IsLowBitrateAvailable = in.readString();
+		IsVerified = in.readString();
+		Popularity = in.readString();
+		ArtistName = in.readString();
+		ArtistID = in.readString();
+		AlbumName = in.readString();
+		AlbumID = in.readString();
+		Year = in.readString();
+		CoverArtFilename = in.readString();
+		TrackNum = in.readString();
+		AvgDailyWeight = in.readString();
+		NumPlaysMonth = in.readString();	
+	}
+	@Override
+	public void writeToParcel(Parcel out, int flags) {	
+		out.writeString(Name);
+		out.writeString(SongID);
+		out.writeString(EstimateDuration);
+		out.writeString(Flags);
+		out.writeString(IsLowBitrateAvailable);
+		out.writeString(IsVerified);
+		out.writeString(Popularity);
+		out.writeString(ArtistName);
+		out.writeString(ArtistID);
+		out.writeString(AlbumName);
+		out.writeString(AlbumID);
+		out.writeString(Year);
+		out.writeString(CoverArtFilename);
+		out.writeString(TrackNum);
+		out.writeString(AvgDailyWeight);
+		out.writeString(NumPlaysMonth);
+
 	}
 }
