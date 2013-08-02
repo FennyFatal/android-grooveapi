@@ -18,35 +18,6 @@ import android.os.StrictMode;
 
 public class Client{
 	
-	public interface asyncCallback {
-		public void recievePlaylist(Playlist pl, long reqid);
-		public void recieveClient(Client cl, long reqid);
-	}
-	
-	private static AsyncClassReciever mine; 
-	
-	private abstract class AsyncClassReciever implements asyncCallback
-	{
-		
-	}
-	
-	public static long getNewClientAsync(AsyncClassReciever you)
-	{
-		mine = you;
-		new CreateNewAsyncClient().execute(null);
-		return 0;
-	}
-	private class CreateNewAsyncClient extends AsyncTask<Void, Void, Long> {
-
-		@Override
-		protected Long doInBackground(Void... params) {
-			
-		}
-		protected void onPostExecute(Long result) {
-	         mine.recieveClient(result, reqid)
-	     }
-	}
-
 	String SALT = "gooeyFlubber";
 	String VERSION = "20120830";
 	String CLIENT_NAME ="mobileshark";
