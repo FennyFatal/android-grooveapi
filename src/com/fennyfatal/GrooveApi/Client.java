@@ -13,11 +13,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.StrictMode;
 
 public class Client{
-	
+	public interface GrooveApiAsyncReceiver {
+		public void recieveClientAsync (Client c);
+		public void recievePlaylistAsync (Playlist pl);
+		public void recievePlayURL(Song theSong,String url);
+	}
 	String SALT = "gooeyFlubber";
 	String VERSION = "20120830";
 	String CLIENT_NAME ="mobileshark";
@@ -46,8 +49,8 @@ public class Client{
 		 * This is so we can do all of these things from the main thread, it is recommended to make calls from worker threads.
 		 * This will likely be removed from the final release. Please do not rely on it if you use this in your projects. 
 		 */
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-		StrictMode.setThreadPolicy(policy);
+		//StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		//StrictMode.setThreadPolicy(policy);
 		
 		//Set up needed information for the instance.
 		if (!getSessionandCountry())

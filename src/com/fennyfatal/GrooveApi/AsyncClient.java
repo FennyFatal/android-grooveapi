@@ -1,69 +1,162 @@
 package com.fennyfatal.GrooveApi;
 
+import java.util.ArrayList;
+
+import com.fennyfatal.GrooveApi.Client.GrooveApiAsyncReceiver;
+
 import android.content.Context;
 import android.os.AsyncTask;
 
 /*
- * This needs major refactoring. Input should be sane, and the like.
+ * Here we have asynchronicity. 
  *  
  */
-public class AsyncClient implements GrooveApiAsyncReciever
+public class AsyncClient implements GrooveApiAsyncReceiver
 {
-	boolean initialized;
+	boolean executingQuery;
 	Client myClient = null;
-	GrooveApiAsyncReciever reciever;
-	public AsyncClient(GrooveApiAsyncReciever reciever) {
-		this.reciever = reciever;
-	}
-	public AsyncClient() {
-		
-	}
-	public boolean hasClient()
+	Context lastContext;
+	ArrayList<GrooveApiAsyncReceiver> receivers;
+	
+	/*
+	 * Constructors
+	 */
+	
+	public AsyncClient(Context receiver)
 	{
-		return (myClient != null);
+		this(receiver, true);
 	}
-	public void getNewClassAsync()
+	
+	public AsyncClient(Context receiver, boolean initializeClient) {
+		lastContext = (Context) receiver;
+		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
+		if (receiver instanceof GrooveApiAsyncReceiver)
+			receivers.add((GrooveApiAsyncReceiver) receiver);
+		if (initializeClient)
+			initializeClientAsync();
+	}
+	
+	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver)
 	{
-		new AsyncClientInit().execute(reciever,this);
+		this(aContext,receiver,true);
 	}
-	public void getNewClassAsync(GrooveApiAsyncReciever reciever)
+	
+	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver, boolean initializeClient) {
+		lastContext = aContext;
+		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
+		this.receivers.add(receiver);
+		if (initializeClient)
+			initializeClientAsync();
+	}
+	
+	public boolean registerGrooveApiAsyncReceiver(GrooveApiAsyncReceiver receiver)
 	{
-		this.reciever = reciever;
-		new AsyncClientInit().execute(reciever,this);
+		return receivers.add(receiver);
 	}
+	
+	
+	public boolean removeGrooveApiAsyncReceiver(GrooveApiAsyncReceiver receiver)
+	{
+		return receivers.remove(receiver);
+	}
+	/*
+	 * This method will only return true when the asynchronous client creation has completed.
+	 */
+	public boolean isExecutingQuery()
+	{
+		return executingQuery;
+	}
+	
+	/*
+	 * WARNING: this method will return null if init has not completed.
+	 */
+	public Client getClient()
+	{
+		return myClient;
+	}
+	/*
+	 * This method creates a new local client and sends THE SAME INSTANCE to all of the registered receivers.
+	 */
+	public void initializeClientAsync()
+	{
+		myClient = null;
+		executingQuery = true;
+		new AsyncClientInit().execute(lastContext,this);
+	}
+	
+	/*
+	 * This method replaces the local client  
+	 */
+	public void initializeClientAsync(Context theContext)
+	{
+		myClient = null;
+		executingQuery = true;
+		new AsyncClientInit().execute(theContext,this);
+	}
+	
+	/*
+	 * This method sends a search query using the local client, and sends it to all of the receivers.
+	 */
 	public void doSearchAsync(String query)
 	{
+		executingQuery = true;
 		new AsyncClientDoSearch().execute(myClient,query,this);
 	}
+
+	/*
+	 * This method sends a search query using the local client, and sends it to all of the receivers.
+	 */
 	public void getPopular()
 	{
+		executingQuery = true;
 		new AsyncClientGetPopular().execute(myClient,this);
 	}
+	/*
+	 * This method sends a search query using the local client, and sends it to all of the receivers.
+	 */
 	public int getSongUrl(Song s)
 	{
+		executingQuery = true;
 		new AsyncClientGetPlayURL().execute(myClient,s,this);
 		return Integer.parseInt(s.getSongID());
 	}
 	
-	public void getNewClassAsync(GrooveApiAsyncReciever reciever, Context theContext)
+	/*STATIC Methods And Classes below here*/
+	
+	/*
+	 * This method sends a search query using supplied context, and sends it to the supplied receiver.
+	 */
+	public static void getNewClassAsync(GrooveApiAsyncReceiver receiver, Context theContext)
 	{
-		this.reciever = reciever;
-		new AsyncClientInit().execute(theContext,this);
+		new AsyncClientInit().execute(theContext,receiver);
 	}
-	public void doSearchAsync(GrooveApiAsyncReciever reciever, String query, Client theClient)
+	/*
+	 * This method sends a search query using supplied context, and client and sends it to the supplied receiver.
+	 */
+	public static void doSearchAsync(GrooveApiAsyncReceiver receiver, String query, Client theClient)
 	{
-		new AsyncClientDoSearch().execute(theClient,query,reciever);
+		new AsyncClientDoSearch().execute(theClient,query,receiver);
 	}
-	public void getPopular(GrooveApiAsyncReciever reciever, Client theClient)
+	
+	/*
+	 * This method sends a popular query using supplied context, and client and sends it to the supplied receiver.
+	 */
+	public static void getPopular(GrooveApiAsyncReceiver receiver, Client theClient)
 	{
-		new AsyncClientGetPopular().execute(theClient,reciever);
+		new AsyncClientGetPopular().execute(theClient,receiver);
 	}
-	public int getSongUrl(GrooveApiAsyncReciever reciever, Song s , Client theClient)
+	
+	/*
+	 * This method requests a song for a given song using the supplied client, and the result is sent to the supplied receiver.
+	 * This method returns the unique song ID for call tracking purposes.
+	 */
+	public static int getSongUrl(GrooveApiAsyncReceiver receiver, Song s , Client theClient)
 	{
-		new AsyncClientGetPlayURL().execute(theClient,s,reciever);
+		new AsyncClientGetPlayURL().execute(theClient,s,receiver);
 		return Integer.parseInt(s.getSongID());
 	}
-	class AsyncClientGetPopular extends AsyncTask<Object, Integer, Object[]> {	
+	
+	private static class AsyncClientGetPopular extends AsyncTask<Object, Integer, Object[]> {	
 
 		@Override
 	    protected Object[] doInBackground(Object... arg) {
@@ -74,10 +167,10 @@ public class AsyncClient implements GrooveApiAsyncReciever
 		@Override
 	    protected void onPostExecute(Object[] result) {
 	    	Playlist playlist = (Playlist)result[0];
-	        ((GrooveApiAsyncReciever)result[2]).recievePlaylistAsync(playlist);
+	        ((GrooveApiAsyncReceiver)result[2]).recievePlaylistAsync(playlist);
 	    }
 	}
-	class AsyncClientGetPlayURL extends AsyncTask<Object, Integer, Object[]> {	
+	private static class AsyncClientGetPlayURL extends AsyncTask<Object, Integer, Object[]> {	
 
 		@Override
 	    protected Object[] doInBackground(Object... arg) {
@@ -87,10 +180,10 @@ public class AsyncClient implements GrooveApiAsyncReciever
 	    }
 		@Override
 	    protected void onPostExecute(Object[] result) {
-	        ((GrooveApiAsyncReciever)result[2]).recievePlayURL(((Song)result[1]), (String) result[0]);
+	        ((GrooveApiAsyncReceiver)result[2]).recievePlayURL(((Song)result[1]), (String) result[0]);
 	    }
 	}
-	class AsyncClientDoSearch extends AsyncTask<Object, Integer, Object[]> {	
+	private static class AsyncClientDoSearch extends AsyncTask<Object, Integer, Object[]> {	
 
 		@Override
 	    protected Object[] doInBackground(Object... arg) {
@@ -101,41 +194,47 @@ public class AsyncClient implements GrooveApiAsyncReciever
 		@Override
 	    protected void onPostExecute(Object[] result) {
 	    	Playlist playlist = (Playlist)result[0];
-	        ((GrooveApiAsyncReciever)result[2]).recievePlaylistAsync(playlist);
+	        ((GrooveApiAsyncReceiver)result[2]).recievePlaylistAsync(playlist);
 	    }
 	}
-	class AsyncClientInit extends AsyncTask<Object, Integer, Object[]> {	
+	private static class AsyncClientInit extends AsyncTask<Object, Integer, Object[]> {	
 
 		@Override
 	    protected Object[] doInBackground(Object... arg) {
-	    	Object milk = null;
+	    	Object client = null;
 	    	try
 	    	{
-	    	milk = new Client((Context) arg[0]);
+	    	client = new Client((Context) arg[0]);
 	    	} catch (Exception ex) {}
-	    	Object[] bob = {milk, arg[1]};
-	        return  bob;
+	    	Object[] retval = {client, arg[1]};
+	        return  retval;
 	    }
 		@Override
 	    protected void onPostExecute(Object[] result) {
 	    	Client client = (Client)result[0];
-	        ((GrooveApiAsyncReciever)result[1]).recieveClientAsync(client);
+	        ((GrooveApiAsyncReceiver)result[1]).recieveClientAsync(client);
 	    }
 	}
 	@Override
 	public void recieveClientAsync(Client c) {
 		myClient = c;
-		if (reciever != null)
-			reciever.recieveClientAsync(c);
+		for (GrooveApiAsyncReceiver rec : receivers) 
+		if (rec != null)
+			rec.recieveClientAsync(c);
+		executingQuery = false;
 	}
 	@Override
 	public void recievePlaylistAsync(Playlist pl) {
-		if (reciever != null)
-			reciever.recievePlaylistAsync(pl);
+		for (GrooveApiAsyncReceiver rec : receivers) 
+		if (rec != null)
+			rec.recievePlaylistAsync(pl);
+		executingQuery = false;
 	}
 	@Override
 	public void recievePlayURL(Song theSong, String url) {
-		if (reciever != null)
-			reciever.recievePlayURL(theSong, url);
+		for (GrooveApiAsyncReceiver rec : receivers) 
+		if (rec != null)
+			rec.recievePlayURL(theSong, url);
+		executingQuery = false;
 	}
 }
