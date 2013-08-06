@@ -13,7 +13,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.os.StrictMode;
 
 public class Client{
 	public interface GrooveApiAsyncReceiver {
@@ -66,11 +65,11 @@ public class Client{
 	 * oddly enough the internal song array is also called "result" here.
 	 * It also has a slightly different field layout from the popular songs results.
 	 */
-	public Playlist getPopularSongs()
+	public Playlist getPopularSongs(String period)
 	{
 		JSONArray songs;
 	try {
-		songs = getPopularSongs("monthly").getJSONArray("Songs");
+		songs = getPopularSongsInt(period).getJSONArray("Songs");
 		Playlist Songs = new Playlist();
 		for (int i = 0; i< songs.length() ; i++)
 		{
@@ -148,7 +147,7 @@ public class Client{
 	 * Internal method that holds the param definition for popularGetSongs.
 	 * returns the Result object from the json response.
 	 */
-	private JSONObject getPopularSongs (String period)
+	private JSONObject getPopularSongsInt (String period)
 	{
 		if (period.equals("monthly") || period.equals("daily"))
 		{

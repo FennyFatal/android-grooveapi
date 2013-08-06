@@ -106,10 +106,10 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	/*
 	 * This method sends a search query using the local client, and sends it to all of the receivers.
 	 */
-	public void getPopular()
+	public void getPopular(String period)
 	{
 		executingQuery = true;
-		new AsyncClientGetPopular().execute(myClient,this);
+		new AsyncClientGetPopular().execute(myClient,this, period);
 	}
 	/*
 	 * This method sends a search query using the local client, and sends it to all of the receivers.
@@ -141,9 +141,9 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	/*
 	 * This method sends a popular query using supplied context, and client and sends it to the supplied receiver.
 	 */
-	public static void getPopular(GrooveApiAsyncReceiver receiver, Client theClient)
+	public static void getPopular(GrooveApiAsyncReceiver receiver, Client theClient, String period)
 	{
-		new AsyncClientGetPopular().execute(theClient,receiver);
+		new AsyncClientGetPopular().execute(theClient,receiver, period);
 	}
 	
 	/*
@@ -160,7 +160,7 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 
 		@Override
 	    protected Object[] doInBackground(Object... arg) {
-	    	Object playlist = ((Client)arg[0]).getPopularSongs();
+	    	Object playlist = ((Client)arg[0]).getPopularSongs((String)arg[2]);
 	    	Object[] retval = {playlist,arg[0],arg[1]};
 	    	return retval;
 	    }
