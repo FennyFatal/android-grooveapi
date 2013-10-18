@@ -297,15 +297,16 @@ public class Client{
 	private boolean getSessionandCountry()
 	{
 		try{
-		String[] response = Utils.getRawUrlRequest("grooveshark.com", "/", 80, false);
+		long utmb = Calendar.getInstance().getTimeInMillis() / 1000;
+		String[] response = Utils.getRawUrlRequest("grooveshark.com", "/preload.php?" + (utmb + 1) +"&getCommunicationToken=1&hash=", 80, false);
 		String header = response[0];
 		String body = response[1];
-		String jsonfinder = "window.gsConfig = ";
-		int start = body.indexOf(jsonfinder)+jsonfinder.length();
-		int end = body.indexOf(";",start);
+		String jsonfinder = "window.tokenData = {";
+		int start = (body.indexOf(jsonfinder)+jsonfinder.length()) - 1;
+		int end = body.indexOf("};",start) +1;
 		String json = body.substring(start,end);
 		JSONObject values = new JSONObject(json);
-		this.country = values.getString("country");
+		this.country = values.getJSONObject("getGSConfig").getString("country");
 		String session = "PHPSESSID=";
 		start = header.indexOf(session)+session.length();
 		this.session = header.substring(start,start+32);
