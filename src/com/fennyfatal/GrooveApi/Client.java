@@ -307,19 +307,20 @@ public class Client{
 	private boolean getSessionandCountry(boolean useCountryHack)
 	{
 		try{
-		String[] response = Utils.getRawUrlRequest("grooveshark.com", "/", 80, false);
+		long utmb = Calendar.getInstance().getTimeInMillis() / 1000;
+		String[] response = Utils.getRawUrlRequest("grooveshark.com", "/preload.php?" + (utmb + 1) +"&getCommunicationToken=1&hash=", 80, false);
 		String header = response[0];
 		String body = response[1];
-		String jsonfinder = "window.gsConfig = ";
-		int start = body.indexOf(jsonfinder)+jsonfinder.length();
-		if (!useCountryHack && (start != jsonfinder.length() - 1)) 
+		String jsonfinder = "window.tokenData = {";
+		int start = (body.indexOf(jsonfinder)+jsonfinder.length()) - 1;
+		if (!useCountryHack && (start > (jsonfinder.length() - 2))) 
 		{
 			try
 			{
-			int end = body.indexOf(";",start);
+			int end = body.indexOf("};",start) +1;
 			String json = body.substring(start,end);
 			JSONObject values = new JSONObject(json);
-			this.country = values.getString("country");
+			this.country = values.getJSONObject("getGSConfig").getString("country");
 			} catch (Exception ex) { useCountryHack = true;}
 		}
 		else 
