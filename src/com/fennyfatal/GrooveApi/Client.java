@@ -44,6 +44,11 @@ public class Client{
 	
 	public Client(Context theContext) throws Exception 
 	{
+		this(theContext, false);
+	}
+	
+	public Client(Context theContext, boolean useCountryHack) throws Exception 
+	{
 		/*
 		 * This is so we can do all of these things from the main thread, it is recommended to make calls from worker threads.
 		 * This will likely be removed from the final release. Please do not rely on it if you use this in your projects. 
@@ -52,7 +57,7 @@ public class Client{
 		//StrictMode.setThreadPolicy(policy);
 		
 		//Set up needed information for the instance.
-		if (!getSessionandCountry())
+		if (!getSessionandCountry(useCountryHack))
 			throw new Exception(); //TODO Put some information in here.
 		uuid = UUID.randomUUID();
 		if (!getCommunicationToken())
@@ -296,16 +301,31 @@ public class Client{
 	 */
 	private boolean getSessionandCountry()
 	{
+		return getSessionandCountry(false);
+	}
+	
+	private boolean getSessionandCountry(boolean useCountryHack)
+	{
 		try{
 		String[] response = Utils.getRawUrlRequest("grooveshark.com", "/", 80, false);
 		String header = response[0];
 		String body = response[1];
 		String jsonfinder = "window.gsConfig = ";
 		int start = body.indexOf(jsonfinder)+jsonfinder.length();
-		int end = body.indexOf(";",start);
-		String json = body.substring(start,end);
-		JSONObject values = new JSONObject(json);
-		this.country = values.getString("country");
+		if (!useCountryHack && (start != jsonfinder.length() - 1)) 
+		{
+			try
+			{
+			int end = body.indexOf(";",start);
+			String json = body.substring(start,end);
+			JSONObject values = new JSONObject(json);
+			this.country = values.getString("country");
+			} catch (Exception ex) { useCountryHack = true;}
+		}
+		else 
+		{
+			this.country = "{\"CC1\":\"0\", \"CC2\":\"0\", \"CC3\":\"0\", \"CC4\":\"0\", \"ID\":\"1\"}"; 
+		}
 		String session = "PHPSESSID=";
 		start = header.indexOf(session)+session.length();
 		this.session = header.substring(start,start+32);

@@ -21,32 +21,36 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	/*
 	 * Constructors
 	 */
-	
 	public AsyncClient(Context receiver)
 	{
-		this(receiver, true);
+		this(receiver, true, false);
 	}
 	
-	public AsyncClient(Context receiver, boolean initializeClient) {
+	public AsyncClient(Context receiver, boolean useCountryHack)
+	{
+		this(receiver, true, useCountryHack);
+	}
+	
+	public AsyncClient(Context receiver, boolean initializeClient, boolean useCountryHack) {
 		lastContext = (Context) receiver;
 		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
 		if (receiver instanceof GrooveApiAsyncReceiver)
 			receivers.add((GrooveApiAsyncReceiver) receiver);
 		if (initializeClient)
-			initializeClientAsync();
+			initializeClientAsync(useCountryHack);
 	}
 	
-	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver)
+	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver, boolean useCountryHack)
 	{
-		this(aContext,receiver,true);
+		this(aContext,receiver,true,useCountryHack);
 	}
 	
-	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver, boolean initializeClient) {
+	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver, boolean initializeClient, boolean useCountryHack) {
 		lastContext = aContext;
 		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
 		this.receivers.add(receiver);
 		if (initializeClient)
-			initializeClientAsync();
+			initializeClientAsync(useCountryHack);
 	}
 	
 	public boolean registerGrooveApiAsyncReceiver(GrooveApiAsyncReceiver receiver)
@@ -77,21 +81,21 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	/*
 	 * This method creates a new local client and sends THE SAME INSTANCE to all of the registered receivers.
 	 */
-	public void initializeClientAsync()
+	public void initializeClientAsync(boolean useCountryHack)
 	{
 		myClient = null;
 		executingQuery = true;
-		new AsyncClientInit().execute(lastContext,this);
+		new AsyncClientInit().execute(lastContext,this,useCountryHack);
 	}
 	
 	/*
 	 * This method replaces the local client  
 	 */
-	public void initializeClientAsync(Context theContext)
+	public void initializeClientAsync(Context theContext, boolean useCountryHack)
 	{
 		myClient = null;
 		executingQuery = true;
-		new AsyncClientInit().execute(theContext,this);
+		new AsyncClientInit().execute(theContext,this,useCountryHack);
 	}
 	
 	/*
@@ -126,7 +130,7 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	/*
 	 * This method sends a search query using supplied context, and sends it to the supplied receiver.
 	 */
-	public static void getNewClassAsync(GrooveApiAsyncReceiver receiver, Context theContext)
+	public static void getNewClassAsync(GrooveApiAsyncReceiver receiver, Context theContext, boolean useCountryHack)
 	{
 		new AsyncClientInit().execute(theContext,receiver);
 	}
@@ -204,7 +208,7 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	    	Object client = null;
 	    	try
 	    	{
-	    	client = new Client((Context) arg[0]);
+	    	client = new Client((Context) arg[0], (Boolean) arg[2]);
 	    	} catch (Exception ex) {}
 	    	Object[] retval = {client, arg[1]};
 	        return  retval;
