@@ -1,1 +1,30 @@
 This project is intended to make a simple android API for accessing grooveshark.
+
+Initializing a client and performing a search would look something like this:
+
+	public class MyActivity implements GrooveApiAsyncReceiver {
+		AsyncClient mAsyncClient = null;
+	
+		@Override protected void onCreate(Bundle savedInstanceState) {
+			//Your Init code here.
+			mAsyncClient = new AsyncClient(this);
+		}
+
+		@Override
+		public void recieveClientAsync(Client c) {
+			/*We are initialized here, now we can search, and since we made a new async client object we don't care
+			* about the client object we got back. We would only use this if were using the async methods in a static way.
+			*/
+			mAsyncClient.doSearchAsync("song title");
+		}
+
+		@Override
+		public void recievePlaylistAsync(final Playlist pl) {
+			//Do stuff with the playlist we got back here.
+		}
+
+		@Override
+		public void recievePlayURL(Song theSong,String url) {
+			//Final method to satisfy implementation. This method would return the stream url that was called for asynchronously.
+		}
+	}
