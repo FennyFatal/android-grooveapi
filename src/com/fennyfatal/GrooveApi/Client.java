@@ -21,6 +21,81 @@ public class Client{
 		public void recievePlayURL(Song theSong,String url);
 		public void recieveShareURL(Song theSong,String url);
 	}
+
+	public static class RequestArgs
+	{
+		public static String LastARG (String arg)
+		{
+			int lastloc = arg.lastIndexOf(',');
+			if (lastloc != -1)
+				return arg.substring(0, arg.lastIndexOf(','));
+			else
+				return arg;
+		}
+		public static String SongID (String songID)
+		{
+			return "\"songID\":"+'"'+songID+'"' 
+					+',';
+		}
+		public static String Type (String type)
+		{
+			return "\"type\":" + '"' + type + '"' 
+					+',';
+		}
+		public static String Query (String query)
+		{
+			return "\"query\":" + '"' + query +'"' 
+					+',';
+		}
+		public static String Country (String country)
+		{
+			return "\"country\":"+ country
+					+',';
+		}
+		public static String Mobile (boolean mobile)
+		{
+			return "\"mobile\":" + mobile
+					+',';
+		}
+		public static String Prefetch (boolean prefetch)
+		{
+			return "\"prefetch\":" + prefetch
+					+',';
+		}
+		public static String Token (String token)
+		{
+			if (token == null)
+				return "\"token\":null"	
+					+',';
+			else
+				return "\"token\":\""+ token + '"'
+					+',';
+		}
+		public static String Uuid (String uuid)
+		{
+			return "\"uuid\":\""+uuid+'"'
+					+',';
+		}
+		public static String Client (String client)
+		{
+			return "\"client\":\""+ client+'"'
+					+',';
+		}
+		public static String Session (String session)
+		{
+			return "\"session\":\""+session+'"'
+					+',';
+		}
+		public static String ClientRevision (String clientRevision)
+		{ 
+			return "\"clientRevision\":\""+clientRevision+'"'
+					+',';
+		}
+		public static String SecretKey (String secretKey)
+		{ 
+			return "\"secretKey\":\""+secretKey+"\",";
+		}
+	}
 	String SALT_JSQUEUE = "nuggetsOfBaller";
 	String VERSION_JSQUEUE = "20130520";
 	String CLIENT_NAME_JSQUEUE ="jsqueue";
@@ -137,8 +212,8 @@ public class Client{
 			return new JSONObject(
 			request("getResultsFromSearch", 
 					'{' +
-					"\"type\":" + '"' + type +"\","+
-					"\"query\":" + '"' + query +'"'+
+					RequestArgs.Type(type) +
+					RequestArgs.LastARG(RequestArgs.Query(query)) +
 					'}')[1]).getJSONObject("result");
 			
 		} catch (JSONException e) {
@@ -161,7 +236,10 @@ public class Client{
 		if (period.equals("monthly") || period.equals("daily"))
 		{
 			try {
-				return new JSONObject(request("popularGetSongs","{\"type\":\""+period+"\"}",true)[1]).getJSONObject("result");
+				return new JSONObject(request("popularGetSongs",
+						'{' +
+						RequestArgs.LastARG(RequestArgs.Type(period)) + 
+						'}',true)[1]).getJSONObject("result");
 			} catch (JSONException e) {
 				// TODO Should we just re-throw this?
 				e.printStackTrace();
@@ -194,11 +272,11 @@ public class Client{
 		try {
 			return new JSONObject( request("getStreamKeyFromSongIDEx",
 				"{"+
-				"\"type\":" + "0"+"," +
-				"\"prefetch\":false," +
-				"\"songID\":"+'"'+songID+'"'+"," +
-				"\"country\":"+ this.country +"," +
-				"\"mobile\":false"+
+				RequestArgs.Type("0") +
+				RequestArgs.Prefetch(false) +
+				RequestArgs.SongID(songID) +
+				RequestArgs.Country(country) + 
+				RequestArgs.LastARG(RequestArgs.Mobile(false)) +
 				"}")[1]).getJSONObject("result");
 		} catch (JSONException e) {
 			// TODO Should we just re-throw this?
@@ -216,8 +294,8 @@ public class Client{
 		try {
 			return new JSONObject( request("getTokenForSong",
 				"{"+
-				"\"songID\":"+'"'+songID+'"'+
-				"\"country\":"+ this.country +"," +
+				RequestArgs.SongID(songID) +
+				RequestArgs.LastARG(RequestArgs.Country(this.country)) +
 				'}')[1]);
 		} catch (JSONException e) {
 			// TODO Should we just re-throw this?
@@ -225,30 +303,25 @@ public class Client{
 		}
 		return null;
 	}
+	
 	private JSONObject getDetailsForBroadcast(String songID)
 	{
 		try {
 			String result = request("getDetailsForBroadcast",
-					"{"+
-							"\"songID\":"+'"'+songID+'"'+
-							'}',true, true)[1];
-			return new JSONObject( result );
+					'{'+
+					RequestArgs.LastARG(RequestArgs.SongID(songID)) +
+					'}',true, true)[1];
+			return new JSONObject( result ).getJSONObject("result");
 		} catch (JSONException e) {
 			// TODO Should we just re-throw this?
 			e.printStackTrace();
 		}
 		return null;
 	}
+	
 	public String getShareURL(Song s)
 	{
-		JSONObject streamdata = null;
-		try {
-			streamdata = getDetailsForBroadcast(s.SongID).getJSONObject("result")
-					;
-		} catch (JSONException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		JSONObject streamdata = getDetailsForBroadcast(s.SongID);
 		if (streamdata != null)
 		{
 			try {
@@ -260,12 +333,13 @@ public class Client{
 		}
 		return null;
 	}
+	
 	public Playlist getPlaylistFromToken(String token)
 	{
 		JSONObject songs;
 	try {
 		Playlist Songs = new Playlist();
-		Songs.add(Song.songFromJSONObject(getSongFromToken(token).getJSONObject("result")));
+		Songs.add(Song.songFromJSONObject(getSongFromToken(token)));
 		return Songs;
 	} catch (JSONException e) {
 		// TODO Should we just re-throw this?
@@ -273,13 +347,15 @@ public class Client{
 	}
 	return null;
 	}
+	
 	private JSONObject getSongFromToken(String token)
 	{
 		try {
 			return new JSONObject( request("getSongFromToken",
 				"{"+
-				"\"token\":"+'"'+token+'"'+"," +
-				"\"country\":"+ this.country + '}')[1]);
+				RequestArgs.Token(token) +
+				RequestArgs.LastARG(RequestArgs.Country(this.country)) +
+				'}')[1]).getJSONObject("result");
 		} catch (JSONException e) {
 			// TODO Should we just re-throw this?
 			e.printStackTrace();
@@ -296,7 +372,10 @@ public class Client{
 	private boolean getCommunicationToken() {
 		try {
 			this.token = "null";
-			String body = request("getCommunicationToken", "{\"secretKey\":\""+Utils.md5(session)+"\"}", true)[1];
+			String body = request("getCommunicationToken", 
+					'{' + 
+					RequestArgs.LastARG(RequestArgs.SecretKey(Utils.md5(session))) +
+					'}', true)[1];
 			JSONObject values = new JSONObject(body);
 			this.token = values.getString("result");
 			this.time = Calendar.getInstance().getTimeInMillis()+this.TTL;
@@ -307,14 +386,17 @@ public class Client{
 		}
 		return false;
 	}
+	
 	private String[] request(String method, String paramaters)
 	{
 		return request(method, paramaters, true, false);
 	}
+	
 	private String[] request(String method, String paramaters,boolean secure)
 	{
 		return request(method, paramaters, secure, false);
 	}
+	
 	/*
 	 * This method is the main request builder of the application.
 	 * The whole thing is working RAW primarily due to my dissatisfaction with 
@@ -332,12 +414,11 @@ public class Client{
 		try {
 		Body =  "{\"header\":"+
 			"{"+
-			"\"token\":"+(this.token.equals("null")? "null" : '"' + 
-				genToken(method,this.token,isJSQUEUE) + '"' )+","+
-			"\"uuid\":\""+this.uuid.toString().toUpperCase()+"\","+
-			"\"client\":\""+ (isJSQUEUE ? this.CLIENT_NAME_JSQUEUE : this.CLIENT_NAME)+"\","+
-			"\"session\":\""+this.session+"\","+
-			"\"clientRevision\":\""+(isJSQUEUE ? this.VERSION_JSQUEUE : this.VERSION)+"\"" +
+			RequestArgs.Token(this.token.equals("null")? null : genToken(method,this.token,isJSQUEUE)) +
+			RequestArgs.Uuid(this.uuid.toString().toUpperCase()) +
+			RequestArgs.Client(isJSQUEUE ? this.CLIENT_NAME_JSQUEUE : this.CLIENT_NAME) +
+			RequestArgs.Session(this.session) +
+			RequestArgs.LastARG(RequestArgs.ClientRevision(isJSQUEUE ? this.VERSION_JSQUEUE : this.VERSION)) +
 			"}," +
 			"\"parameters\":"+
 			paramaters +','+
