@@ -19,7 +19,11 @@ public class Client{
 		public void recieveClientAsync (Client c);
 		public void recievePlaylistAsync (Playlist pl);
 		public void recievePlayURL(Song theSong,String url);
+		public void recieveShareURL(Song theSong,String url);
 	}
+	String SALT_JSQUEUE = "nuggetsOfBaller";
+	String VERSION_JSQUEUE = "20130520";
+	String CLIENT_NAME_JSQUEUE ="jsqueue";
 	String SALT = "gooeyFlubber";
 	String VERSION = "20120830";
 	String CLIENT_NAME ="mobileshark";
@@ -204,12 +208,86 @@ public class Client{
 	}
 	
 	/*
+	 * Internal method that holds the param definition for getSongFromToken.
+	 * returns the Result object from the json response.
+	 */
+	private JSONObject getTokenForSong(String songID)
+	{
+		try {
+			return new JSONObject( request("getTokenForSong",
+				"{"+
+				"\"songID\":"+'"'+songID+'"'+
+				"\"country\":"+ this.country +"," +
+				'}')[1]);
+		} catch (JSONException e) {
+			// TODO Should we just re-throw this?
+			e.printStackTrace();
+		}
+		return null;
+	}
+	private JSONObject getDetailsForBroadcast(String songID)
+	{
+		try {
+			String result = request("getDetailsForBroadcast",
+					"{"+
+							"\"songID\":"+'"'+songID+'"'+
+							'}',true, true)[1];
+			return new JSONObject( result );
+		} catch (JSONException e) {
+			// TODO Should we just re-throw this?
+			e.printStackTrace();
+		}
+		return null;
+	}
+	public String getShareURL(Song s)
+	{
+		JSONObject streamdata = null;
+		streamdata = getDetailsForBroadcast(s.SongID)//.getJSONObject("result")
+				;
+		if (streamdata != null)
+		{
+			try {
+				return streamdata.getString("tinySongURL");
+			} catch (JSONException e) {
+				// TODO Should we just re-throw this?
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+	public Playlist getPlaylistFromToken(String token)
+	{
+		JSONObject songs;
+	try {
+		Playlist Songs = new Playlist();
+		Songs.add(Song.songFromJSONObject(getSongFromToken(token).getJSONObject("result")));
+		return Songs;
+	} catch (JSONException e) {
+		// TODO Should we just re-throw this?
+		e.printStackTrace();
+	}
+	return null;
+	}
+	private JSONObject getSongFromToken(String token)
+	{
+		try {
+			return new JSONObject( request("getSongFromToken",
+				"{"+
+				"\"token\":"+'"'+token+'"'+"," +
+				"\"country\":"+ this.country + '}')[1]);
+		} catch (JSONException e) {
+			// TODO Should we just re-throw this?
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/*
 	 * Here we get the communication token. 
 	 * This seems to last a random amount of time, despite what the header seems to say about expiration.
 	 * We are reupping on it every ~2 min or so for now (configurable in the const values for the time being)
 	 * TODO Add an argument for the TTL in the constructor?
 	 */
-	
 	private boolean getCommunicationToken() {
 		try {
 			this.token = "null";
@@ -226,7 +304,11 @@ public class Client{
 	}
 	private String[] request(String method, String paramaters)
 	{
-		return request(method, paramaters, true);
+		return request(method, paramaters, true, false);
+	}
+	private String[] request(String method, String paramaters,boolean secure)
+	{
+		return request(method, paramaters, secure, false);
 	}
 	/*
 	 * This method is the main request builder of the application.
@@ -234,7 +316,7 @@ public class Client{
 	 * HTTP layers on this platform.
 	 * I am open to any suggestions.
 	 */
-	private String[] request(String method, String paramaters, boolean secure){
+	private String[] request(String method, String paramaters, boolean secure, boolean isJSQUEUE){
 		if (this.token != "null" && Calendar.getInstance().getTime().after(new Date(this.time)))
 			getCommunicationToken();
 		String host = "grooveshark.com";
@@ -246,11 +328,11 @@ public class Client{
 		Body =  "{\"header\":"+
 			"{"+
 			"\"token\":"+(this.token.equals("null")? "null" : '"' + 
-				genToken(method,this.token) + '"' )+","+
+				genToken(method,this.token,isJSQUEUE) + '"' )+","+
 			"\"uuid\":\""+this.uuid.toString().toUpperCase()+"\","+
-			"\"client\":\""+this.CLIENT_NAME+"\","+
+			"\"client\":\""+ (isJSQUEUE ? this.CLIENT_NAME_JSQUEUE : this.CLIENT_NAME)+"\","+
 			"\"session\":\""+this.session+"\","+
-			"\"clientRevision\":\""+this.VERSION+"\"" +
+			"\"clientRevision\":\""+(isJSQUEUE ? this.VERSION_JSQUEUE : this.VERSION)+"\"" +
 			"}," +
 			"\"parameters\":"+
 			paramaters +','+
@@ -279,7 +361,7 @@ public class Client{
 	 * Generate a token based on the SALT, the method we are calling, and the session token. 
 	 * we also prepend a random series of 3 hex bytes we use for salt to the final hash. 
 	 */
-	private String genToken(String method, String token) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	private String genToken(String method, String token,boolean isJSQUEUE) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		Random rnd = new Random();
         String lastRandomizer = "";
         for (int i = 0; i < 3; i++)
@@ -290,7 +372,7 @@ public class Client{
         String clearText = method + ":" + 
         token+      //Why bother passing this as an argument?
         ":" +
-        this.SALT + //or maybe we should pass this as an argument? Would probably be better for portability, and possible refactoring.
+        (isJSQUEUE? this.SALT_JSQUEUE : this.SALT) + //or maybe we should pass this as an argument? Would probably be better for portability, and possible refactoring.
         ":" + lastRandomizer.toLowerCase();
         return (lastRandomizer + Utils.SHA1(clearText)).toLowerCase();
 	}

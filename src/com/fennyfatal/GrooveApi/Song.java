@@ -54,15 +54,22 @@ public class Song implements Parcelable {
 
 	public static Song songFromJSONObject(JSONObject Jsong) throws JSONException
 	{
-		try	{
-		return new Song(Jsong.getString("SongName"),Jsong.getString("SongID"),Jsong.getString("EstimateDuration"),null,Jsong.getString("IsLowBitrateAvailable"),Jsong.getString("IsVerified"),Jsong.getString("PopularityIndex"),Jsong.getString("ArtistName"),Jsong.getString("ArtistID"),Jsong.getString("AlbumName"),Jsong.getString("AlbumID"),Jsong.getString("Year"),Jsong.getString("CoverArtFilename"),Jsong.getString("TrackNum"),null,null);
-		} catch (Exception ex) {} // Try to load from search first, and the SongName value will failout first, allowing us to save cycles testing it.
-		try {
-			Jsong.getString("Weight"); // Try this one first, and same story as above.
-			return new Song(Jsong.getString("Name"),Jsong.getString("SongID"),Jsong.getString("EstimateDuration"),Jsong.getString("Flags"),Jsong.getString("IsLowBitrateAvailable"),Jsong.getString("IsVerified"),Jsong.getString("Popularity"),Jsong.getString("ArtistName"),Jsong.getString("ArtistID"),Jsong.getString("AlbumName"),Jsong.getString("AlbumID"),Jsong.getString("Year"),Jsong.getString("CoverArtFilename"),Jsong.getString("TrackNum"),Jsong.getString("Weight"),Jsong.getString("NumPlays"));
-		} catch (Exception ex) {}
-		return new Song(Jsong.getString("Name"),Jsong.getString("SongID"),Jsong.getString("EstimateDuration"),Jsong.getString("Flags"),Jsong.getString("IsLowBitrateAvailable"),Jsong.getString("IsVerified"),Jsong.getString("Popularity"),Jsong.getString("ArtistName"),Jsong.getString("ArtistID"),Jsong.getString("AlbumName"),Jsong.getString("AlbumID"),Jsong.getString("Year"),Jsong.getString("CoverArtFilename"),Jsong.getString("TrackNum"),Jsong.getString("AvgDailyWeight"),Jsong.getString("NumPlaysMonth")); 
-		
+		return new Song(Jsong.optString("SongName",Jsong.optString("Name",null)),
+				Jsong.optString("SongID",null),
+				Jsong.optString("EstimateDuration",null),
+				Jsong.optString("Flags",null),
+				Jsong.optString("IsLowBitrateAvailable",null),
+				Jsong.optString("IsVerified",null),
+				Jsong.optString("PopularityIndex",null),
+				Jsong.optString("ArtistName",null),
+				Jsong.optString("ArtistID",null),
+				Jsong.optString("AlbumName",null),
+				Jsong.optString("AlbumID",null),
+				Jsong.optString("Year",null),
+				Jsong.optString("CoverArtFilename",null),
+				Jsong.optString("TrackNum",null),
+				Jsong.optString("AvgDailyWeight",Jsong.optString("Weight",null)),
+				Jsong.optString("NumPlaysMonth",Jsong.optString("NumPlays",null)));	
 	}
 	
 	public String getName() {

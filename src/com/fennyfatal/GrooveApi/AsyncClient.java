@@ -106,6 +106,12 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 		executingQuery = true;
 		new AsyncClientDoSearch().execute(myClient,query,this);
 	}
+	
+	public void getPlaylistFromToken(String query)
+	{
+		executingQuery = true;
+		new AsyncClientPlaylistFromToken().execute(myClient,query,this);
+	}
 
 	/*
 	 * This method sends a search query using the local client, and sends it to all of the receivers.
@@ -122,6 +128,12 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	{
 		executingQuery = true;
 		new AsyncClientGetPlayURL().execute(myClient,s,this);
+		return Integer.parseInt(s.getSongID());
+	}
+	public int getShareUrl(Song s)
+	{
+		executingQuery = true;
+		new AsyncClientGetShareURL().execute(myClient,s,this);
 		return Integer.parseInt(s.getSongID());
 	}
 	
@@ -141,6 +153,10 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	{
 		new AsyncClientDoSearch().execute(theClient,query,receiver);
 	}
+	public static void getPlaylistFromToken(GrooveApiAsyncReceiver receiver, String query, Client theClient)
+	{
+		new AsyncClientPlaylistFromToken().execute(theClient,query,receiver);
+	}
 	
 	/*
 	 * This method sends a popular query using supplied context, and client and sends it to the supplied receiver.
@@ -157,6 +173,12 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	public static int getSongUrl(GrooveApiAsyncReceiver receiver, Song s , Client theClient)
 	{
 		new AsyncClientGetPlayURL().execute(theClient,s,receiver);
+		return Integer.parseInt(s.getSongID());
+	}
+	
+	public static int getShareUrl(GrooveApiAsyncReceiver receiver, Song s , Client theClient)
+	{
+		new AsyncClientGetShareURL().execute(theClient,s,receiver);
 		return Integer.parseInt(s.getSongID());
 	}
 	
@@ -187,11 +209,38 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	        ((GrooveApiAsyncReceiver)result[2]).recievePlayURL(((Song)result[1]), (String) result[0]);
 	    }
 	}
+	private static class AsyncClientGetShareURL extends AsyncTask<Object, Integer, Object[]> {	
+
+		@Override
+	    protected Object[] doInBackground(Object... arg) {
+	    	Object string = ((Client)arg[0]).getShareURL((Song) arg[1]);
+	    	Object[] retval = {string,arg[1],arg[2]};
+	    	return retval;
+	    }
+		@Override
+	    protected void onPostExecute(Object[] result) {
+	        ((GrooveApiAsyncReceiver)result[2]).recieveShareURL(((Song)result[1]), (String) result[0]);
+	    }
+	}
 	private static class AsyncClientDoSearch extends AsyncTask<Object, Integer, Object[]> {	
 
 		@Override
 	    protected Object[] doInBackground(Object... arg) {
 	    	Object playlist = ((Client)arg[0]).doSearch((String)arg[1]);
+	    	Object[] retval = {playlist,arg[0],arg[2]};
+	    	return retval;
+	    }
+		@Override
+	    protected void onPostExecute(Object[] result) {
+	    	Playlist playlist = (Playlist)result[0];
+	        ((GrooveApiAsyncReceiver)result[2]).recievePlaylistAsync(playlist);
+	    }
+	}
+	private static class AsyncClientPlaylistFromToken extends AsyncTask<Object, Integer, Object[]> {	
+
+		@Override
+	    protected Object[] doInBackground(Object... arg) {
+	    	Object playlist = ((Client)arg[0]).getPlaylistFromToken((String)arg[1]);
 	    	Object[] retval = {playlist,arg[0],arg[2]};
 	    	return retval;
 	    }
@@ -239,6 +288,14 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 		for (GrooveApiAsyncReceiver rec : receivers) 
 		if (rec != null)
 			rec.recievePlayURL(theSong, url);
+		executingQuery = false;
+	}
+
+	@Override
+	public void recieveShareURL(Song theSong, String url) {
+		for (GrooveApiAsyncReceiver rec : receivers) 
+		if (rec != null)
+			rec.recieveShareURL(theSong, url);
 		executingQuery = false;
 	}
 }
