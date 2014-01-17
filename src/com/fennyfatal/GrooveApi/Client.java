@@ -242,8 +242,13 @@ public class Client{
 	public String getShareURL(Song s)
 	{
 		JSONObject streamdata = null;
-		streamdata = getDetailsForBroadcast(s.SongID)//.getJSONObject("result")
-				;
+		try {
+			streamdata = getDetailsForBroadcast(s.SongID).getJSONObject("result")
+					;
+		} catch (JSONException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		if (streamdata != null)
 		{
 			try {
