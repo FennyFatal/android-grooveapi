@@ -22,6 +22,116 @@ public class Client{
 		public void recieveShareURL(Song theSong,String url);
 	}
 
+	public static class BuildRequest
+	{
+		public enum Methods
+		{
+			addSongsToQueue,
+			artistGetSongs,
+			artistGetSongsEx,
+			artistGetFans,
+			artistGetSimilarArtists,
+			albumGetAllSongs,
+			authenticateUserEx,
+			autoplayGetSong,
+			autoplayVoteDownEx,
+			autoplayVoteUpEx,
+			autoplayRemoveVoteDownEx,
+			autoplayRemoveVoteUpEx,
+			broadcastSong,
+			createPlaylistEx,
+			createWidgetIDFromSongIDs,
+			deletePlaylist,
+			favorite,
+			forgotPassword,
+			getAutoCoolPlaylistName,
+			getAffiliateDownloadURLs,
+			getArtistAutocomplete,
+			getArtistByID,
+			getArtistsForTag,
+			getCombinedFeedData,
+			getCommunicationToken,
+			getContactInfoForFollowedUsers,
+			getCountryFromRequestIP,
+			getEmailAddress,
+			getFavorites,
+			getDetailsForBroadcast,
+			getFavouriteIDs,
+			getPlaylistByID,
+			getQueueSongListFromSongIDs,
+			getRecentlyActiveUsers,
+			getSimilarUsers,
+			getSearchResults,
+			getSongForAutoplayExt,
+			getStationByID,
+			getStreamKeyFromSongID,
+			getStreamKeyFromSongIDEx,
+			getTokenForSong,
+			getUserByID,
+			getUserSettings,
+			getUserSidebar,
+			initiateQueueEx,
+			initiateSession,
+			logoutUser,
+			logTargetedThemeImpression,
+			markSongAsDownloaded,
+			markSongComplete,
+			markSongQueueSongPlayed,
+			markSongSkipped,
+			markStreamKeyOver30Seconds,
+			overwriteExistingPlaylist,
+			playlistGetFans,
+			playlistGetSongs,
+			popularGetSongs,
+			registerUserEx,
+			removeSongsFromQueueExte,
+			renamePlaylist,
+			reportBroadcast,
+			setPlaylistAbout,
+			updateStreamKeyLength,
+			userAddSongToLibrary,
+			userGetFans,
+			userGetSongsInLibrary,
+			userGetPlaylists,
+			userGetLibraryTSModified,
+			unFavorite,
+			updateLastfmService,	
+		}
+		public enum Arguments
+		{
+			LastARG,
+			SongID,
+			Type,
+			Query,
+			Country,
+			Mobile,
+			Prefetch,
+			Token,
+			Uuid,
+			Client,
+			Session,
+			ClientRevision,
+			SecretKey,
+		}
+		public class Request
+		{
+			Body myBody;
+			Header myHeader;
+			
+		}
+		public class Params
+		{
+			
+		}
+		public class Header
+		{
+			
+		}
+		public class Body
+		{
+			Params myParams;
+		}
+	}
 	public static class RequestArgs
 	{
 		public static String LastARG (String arg)
@@ -96,6 +206,7 @@ public class Client{
 			return "\"secretKey\":\""+secretKey+"\",";
 		}
 	}
+	
 	String SALT_JSQUEUE = "nuggetsOfBaller";
 	String VERSION_JSQUEUE = "20130520";
 	String CLIENT_NAME_JSQUEUE ="jsqueue";
