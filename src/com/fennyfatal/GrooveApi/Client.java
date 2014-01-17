@@ -221,12 +221,6 @@ public class Client{
 	long time = 0;
 	boolean initialized = false;
 	
-	//For when we ever go internally async.
-	
-	public boolean isInitialized() { 
-		return initialized;
-	}
-	
 	/*
 	 * The Constructor:D
 	 * Just instantiate stuff here. 
@@ -253,6 +247,12 @@ public class Client{
 		if (!getCommunicationToken())
 			throw new Exception(); //TODO Put some information in here.
 		
+	}
+
+	//For when we ever go internally async.
+	
+	public boolean isInitialized() { 
+		return initialized;
 	}
 
 	/*
@@ -285,6 +285,20 @@ public class Client{
 	 * It also has a slightly different field layout from the popular songs results.
 	 */
 	
+	public Playlist getPlaylistFromToken(String token)
+	{
+		JSONObject songs;
+	try {
+		Playlist Songs = new Playlist();
+		Songs.add(Song.songFromJSONObject(getSongFromToken(token)));
+		return Songs;
+	} catch (JSONException e) {
+		// TODO Should we just re-throw this?
+		e.printStackTrace();
+	}
+	return null;
+	}
+
 	public Playlist doSearch(String query)
 	{
 		JSONArray songs;
@@ -304,6 +318,48 @@ public class Client{
 	}
 
 
+	public String GetPlayURL(Song s)
+	{
+		return getStreamURLFromSongID(s.getSongID());
+	}
+	
+	
+	
+	/*
+	 * Internal method that holds the param definition for getStreamKeyFromSongID.
+	 * returns the Result object from the json response.
+	 */
+	
+	public String getShareURL(Song s)
+	{
+		JSONObject streamdata = getDetailsForBroadcast(s.SongID);
+		if (streamdata != null)
+		{
+			try {
+				return streamdata.getString("tinySongURL");
+			} catch (JSONException e) {
+				// TODO Should we just re-throw this?
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+	
+	private String getStreamURLFromSongID(String songID)
+	{
+		JSONObject streamdata = getStreamKeyFromSongID(songID);
+		if (streamdata != null)
+		{
+			try {
+				return "http://"+streamdata.getString("ip")+"/stream.php?streamKey="+streamdata.getString("streamKey");
+			} catch (JSONException e) {
+				// TODO Should we just re-throw this?
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
 	/*
 	 * Overloaded internal method for getResultsFromSearch.
 	 * returns the Result object from the json response.
@@ -312,7 +368,7 @@ public class Client{
 	{
 		return getSearchResults("Songs", query);
 	}
-	
+
 	/*
 	 * Internal method that holds the param definition for getResultsFromSearch.
 	 * returns the Result object from the json response.
@@ -333,11 +389,7 @@ public class Client{
 		}
 		return null;
 	}
-	
-	public String GetPlayURL(Song s)
-	{
-		return getStreamURLFromSongID(s.getSongID());
-	}
+
 	/*
 	 * Internal method that holds the param definition for popularGetSongs.
 	 * returns the Result object from the json response.
@@ -358,21 +410,7 @@ public class Client{
 		}
 		return null;
 	}
-	private String getStreamURLFromSongID(String songID)
-	{
-		JSONObject streamdata = getStreamKeyFromSongID(songID);
-		if (streamdata != null)
-		{
-			try {
-				return "http://"+streamdata.getString("ip")+"/stream.php?streamKey="+streamdata.getString("streamKey");
-			} catch (JSONException e) {
-				// TODO Should we just re-throw this?
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
-	
+
 	/*
 	 * Internal method that holds the param definition for getStreamKeyFromSongID.
 	 * returns the Result object from the json response.
@@ -395,7 +433,7 @@ public class Client{
 		}
 		return null;
 	}
-	
+
 	/*
 	 * Internal method that holds the param definition for getSongFromToken.
 	 * returns the Result object from the json response.
@@ -414,7 +452,7 @@ public class Client{
 		}
 		return null;
 	}
-	
+
 	private JSONObject getDetailsForBroadcast(String songID)
 	{
 		try {
@@ -429,36 +467,7 @@ public class Client{
 		}
 		return null;
 	}
-	
-	public String getShareURL(Song s)
-	{
-		JSONObject streamdata = getDetailsForBroadcast(s.SongID);
-		if (streamdata != null)
-		{
-			try {
-				return streamdata.getString("tinySongURL");
-			} catch (JSONException e) {
-				// TODO Should we just re-throw this?
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
-	
-	public Playlist getPlaylistFromToken(String token)
-	{
-		JSONObject songs;
-	try {
-		Playlist Songs = new Playlist();
-		Songs.add(Song.songFromJSONObject(getSongFromToken(token)));
-		return Songs;
-	} catch (JSONException e) {
-		// TODO Should we just re-throw this?
-		e.printStackTrace();
-	}
-	return null;
-	}
-	
+
 	private JSONObject getSongFromToken(String token)
 	{
 		try {
@@ -473,7 +482,7 @@ public class Client{
 		}
 		return null;
 	}
-	
+
 	/*
 	 * Here we get the communication token. 
 	 * This seems to last a random amount of time, despite what the header seems to say about expiration.
