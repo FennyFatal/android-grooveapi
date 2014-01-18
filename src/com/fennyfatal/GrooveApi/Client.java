@@ -474,7 +474,7 @@ public class Client implements Parcelable
 				"{"+
 				RequestArgs.SongID(songID) +
 				RequestArgs.LastARG(RequestArgs.Country(this.country)) +
-				'}')[1]);
+				'}',true,true)[1]);
 		} catch (JSONException e) {
 			// TODO Should we just re-throw this?
 			e.printStackTrace();
