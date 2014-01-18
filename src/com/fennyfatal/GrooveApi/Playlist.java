@@ -5,13 +5,38 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class Playlist extends ArrayList<Song> {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Playlist extends ArrayList<Song> implements Parcelable {
 	
 	/**
 	 * TODO: Add special song related methods here.
 	 */
+	@SuppressWarnings("rawtypes")
+	public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+	    public Playlist createFromParcel(Parcel parcel) {
+	        return new Playlist(parcel);
+	    }
+
+	    public Playlist[] newArray(int size) {
+	        return new Playlist[size];
+	    }
+	};
 	private static final long serialVersionUID = 1L;
-	
+	public Playlist()
+	{
+		super();
+	}
+	public Playlist(Parcel parcel) {
+		super();
+		int count = parcel.readInt();
+		for (int i =0;i<count;i++)
+		{
+			this.add((Song)parcel.readParcelable(null));
+		}
+	}
+
 	public List<String> toStringList()
 	{
 		ArrayList<String> templist = new ArrayList<String>();
@@ -151,6 +176,21 @@ public class Playlist extends ArrayList<Song> {
 	public void trimToSize() {
 		// TODO Auto-generated method stub
 		super.trimToSize();
+	}
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(this.size());
+		for (Song s : this)
+		{
+			dest.writeParcelable(s, flags);
+		}
 	}
 	
 }
