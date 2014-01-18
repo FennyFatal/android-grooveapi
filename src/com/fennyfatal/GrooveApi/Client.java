@@ -13,9 +13,22 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Client{
-	public interface GrooveApiAsyncReceiver {
+public class Client implements Parcelable
+{
+    @SuppressWarnings("rawtypes")
+	public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public Client createFromParcel(Parcel in) {
+            return new Client(in); 
+        }
+
+        public Client[] newArray(int size) {
+            return new Client[size];
+        }
+    };
+	public interface GrooveApiAsyncReceiver{		
 		public void recieveClientAsync (Client c);
 		public void recievePlaylistAsync (Playlist pl);
 		public void recievePlayURL(Song theSong,String url);
@@ -251,6 +264,22 @@ public class Client{
 
 	//For when we ever go internally async.
 	
+	public Client(Parcel source) {
+		SALT_JSQUEUE = source.readString();
+		VERSION_JSQUEUE = source.readString();
+		CLIENT_NAME_JSQUEUE= source.readString();
+		SALT= source.readString();
+		VERSION= source.readString();
+		CLIENT_NAME= source.readString();
+		session= source.readString();
+		country= source.readString();
+		token= source.readString();
+		TTL = source.readLong();
+		uuid = UUID.fromString(source.readString());
+		time = source.readLong();
+		initialized = source.readInt() == 1;
+	}
+
 	public boolean isInitialized() { 
 		return initialized;
 	}
@@ -624,5 +653,28 @@ public class Client{
 		{
 		return false;
 		}
+	}
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(SALT_JSQUEUE);
+		dest.writeString(VERSION_JSQUEUE);
+		dest.writeString(CLIENT_NAME_JSQUEUE);
+		dest.writeString(SALT);
+		dest.writeString(VERSION);
+		dest.writeString(CLIENT_NAME);
+		dest.writeString(session);
+		dest.writeString(country);
+		dest.writeString(token);
+		dest.writeLong(TTL);
+		dest.writeString(uuid.toString());
+		dest.writeLong(time);
+		dest.writeInt(initialized ? 1 : 0);
 	}
 }

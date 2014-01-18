@@ -6,24 +6,41 @@ import com.fennyfatal.GrooveApi.Client.GrooveApiAsyncReceiver;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /*
  * Here we have asynchronicity. 
  *  
  */
-public class AsyncClient implements GrooveApiAsyncReceiver
+public class AsyncClient implements GrooveApiAsyncReceiver, Parcelable
 {
+    @SuppressWarnings("rawtypes")
+	public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public AsyncClient createFromParcel(Parcel in) {
+            return new AsyncClient(in); 
+        }
+
+        public AsyncClient[] newArray(int size) {
+            return new AsyncClient[size];
+        }
+    };
 	boolean executingQuery;
 	Client myClient = null;
 	Context lastContext;
 	ArrayList<GrooveApiAsyncReceiver> receivers;
-	
+
 	/*
 	 * Constructors
 	 */
 	public AsyncClient(Context receiver)
 	{
 		this(receiver, true, false);
+	}
+	
+	public void setContext(Context receiver)
+	{
+		lastContext = (Context) receiver;
 	}
 	
 	public AsyncClient(Context receiver, boolean useCountryHack)
@@ -35,7 +52,7 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 		lastContext = (Context) receiver;
 		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
 		if (receiver instanceof GrooveApiAsyncReceiver)
-			receivers.add((GrooveApiAsyncReceiver) receiver);
+			registerGrooveApiAsyncReceiver((GrooveApiAsyncReceiver) receiver);
 		if (initializeClient)
 			initializeClientAsync(useCountryHack);
 	}
@@ -48,14 +65,24 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 	public AsyncClient(Context aContext, GrooveApiAsyncReceiver receiver, boolean initializeClient, boolean useCountryHack) {
 		lastContext = aContext;
 		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
-		this.receivers.add(receiver);
+		registerGrooveApiAsyncReceiver(receiver);
 		if (initializeClient)
 			initializeClientAsync(useCountryHack);
 	}
 	
+	public AsyncClient(Parcel in) {
+		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
+		executingQuery = in.readInt() == 1;
+		myClient = in.readParcelable(null);
+	}
+
 	public boolean registerGrooveApiAsyncReceiver(GrooveApiAsyncReceiver receiver)
 	{
-		return receivers.add(receiver);
+		if (!receivers.contains(receiver))
+		{
+			return receivers.add(receiver);
+		}
+		return false;
 	}
 	
 	
@@ -297,5 +324,17 @@ public class AsyncClient implements GrooveApiAsyncReceiver
 		if (rec != null)
 			rec.recieveShareURL(theSong, url);
 		executingQuery = false;
+	}
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(executingQuery?1:0);
+		dest.writeParcelable(myClient,0);
 	}
 }
