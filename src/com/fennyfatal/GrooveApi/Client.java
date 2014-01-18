@@ -316,7 +316,6 @@ public class Client implements Parcelable
 	
 	public Playlist getPlaylistFromToken(String token)
 	{
-		JSONObject songs;
 	try {
 		Playlist Songs = new Playlist();
 		Songs.add(Song.songFromJSONObject(getSongFromToken(token)));

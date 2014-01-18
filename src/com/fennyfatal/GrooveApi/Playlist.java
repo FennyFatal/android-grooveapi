@@ -33,7 +33,7 @@ public class Playlist extends ArrayList<Song> implements Parcelable {
 		int count = parcel.readInt();
 		for (int i =0;i<count;i++)
 		{
-			this.add((Song)parcel.readParcelable(null));
+			this.add((Song)parcel.readParcelable(getClass().getClassLoader()));
 		}
 	}
 

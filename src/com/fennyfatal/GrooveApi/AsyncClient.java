@@ -73,7 +73,7 @@ public class AsyncClient implements GrooveApiAsyncReceiver, Parcelable
 	public AsyncClient(Parcel in) {
 		this.receivers = new ArrayList<Client.GrooveApiAsyncReceiver>();
 		executingQuery = in.readInt() == 1;
-		myClient = in.readParcelable(null);
+		myClient = in.readParcelable(getClass().getClassLoader());
 	}
 
 	public boolean registerGrooveApiAsyncReceiver(GrooveApiAsyncReceiver receiver)
