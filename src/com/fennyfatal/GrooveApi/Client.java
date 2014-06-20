@@ -584,11 +584,7 @@ public class Client implements Parcelable
 		"Host: grooveshark.com",
 		"Content-Length: "+ Body.length() 
 		};
-        try {
-        	return Utils.getRawUrlRequest(host,headers,Body,port,secure);
-		} catch (IOException e) {
-			return null;
-		}
+    	return Utils.getRawUrlRequest(host,headers,Body,port,secure);
     	}
 	
 	/*

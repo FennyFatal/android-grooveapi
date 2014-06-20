@@ -7,17 +7,21 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.nio.CharBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
+import android.annotation.SuppressLint;
+import android.util.Log;
+
 public class Utils {
 	
 	
 	
-	public static String[] getRawUrlRequest(String hostname,String path, int port,boolean usessl) throws IOException {
+	public static String[] getRawUrlRequest(String hostname,String path, int port,boolean usessl) {
 		String[] headers = {
 		"GET "+path+" HTTP/1.1",
         "Host: " + hostname,
@@ -25,10 +29,12 @@ public class Utils {
         "Mozilla/5.0 (Windows NT 6.1)"}; // LIE LIKE A WHORE.
 		return getRawUrlRequest(hostname, headers, null , port, usessl);
 	}
-	public static String[] getRawUrlRequest(String hostname, String[] headers, String body, int port, boolean usessl) throws IOException {
+	@SuppressLint("NewApi")
+	public static String[] getRawUrlRequest(String hostname, String[] headers, String body, int port, boolean usessl) {
         Socket socket = null;
         PrintWriter writer = null;
         BufferedReader reader = null;
+        char[] buf = new char[8192];
         String retval = "";
         String[] theWholeThing = {null,null}; //TODO define an object to hold this.
         try {
@@ -55,32 +61,54 @@ public class Utils {
             theWholeThing[0] = retval;
             boolean chunked = retval.contains("Transfer-Encoding: chunked");
             retval = "";
-            boolean islastline= false;
-            int count = 0;
-            for (String line; (line = reader.readLine()) != null;) {
-            	if (!chunked || !(line.matches("^[0-9a-fA-F]*$") && count == 0))
-            	{
-            		if (chunked && line.matches("^[0-9a-fA-F]*$")) //Hackish way of dealing with chunked encoding.
-            		{
-            			if (!islastline)
-            				retval = retval.substring(0, retval.length()-1);
-            			islastline = true;
-            		}
-            		else
-            		{
-            			retval += line + '\n';
-            			islastline = false;
-            		}
-            	}
-            	count++;
+            try {
+	            for (String line; (line = reader.readLine()) != null;) {
+	            	if (!chunked)
+	            	{
+	            		retval += line;
+	            	}
+	            	else
+	            	{
+	            		int size=Integer.parseInt(line, 16);
+	            		if (size == 0)
+	            			{
+	            			 reader.readLine();
+	            			 break;
+	            			}
+	            		if (size > buf.length)
+	            			buf = new char[size];
+	            		int readCount;
+	            		while ((readCount = reader.read(buf,0,size)) > 0)
+	            		{
+	            			retval += String.copyValueOf(buf, 0, readCount);
+	            			if ((size -= readCount) <= 0)
+	            			{
+	            				String wat = reader.readLine(); //clear any newline characters.
+	            				if (wat.length() > 0)
+	            				{
+	            					Log.w("ERROR", wat);
+	            				}
+	            				break;
+	            			}
+	            		}
+	            	}
+	            }
+            } 
+            catch (IOException e) 
+            {}
+            catch (Exception ec)
+            {
+            	ec.printStackTrace();
             }
-            theWholeThing[1] = retval;
             
+            theWholeThing[1] = retval;
+        } catch (IOException e){  
         } finally {
-            if (reader != null) try { reader.close(); } catch (IOException logOrIgnore) {} 
-            if (writer != null) { writer.close(); }
-            if (socket != null) try { socket.close(); } catch (IOException logOrIgnore) {} 
-        }
+            if (reader != null) try { reader.close(); } catch (Exception logOrIgnore) {} 
+            if (writer != null) try { writer.close(); } catch (Exception logOrIgnore) {}
+            if (socket != null) try { socket.close(); } catch (Exception logOrIgnore) {} 
+        }       
+        
         return theWholeThing;
     }
 	public static final String md5(final String s) {
